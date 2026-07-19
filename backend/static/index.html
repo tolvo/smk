@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoke (SMK) - Chat Efêmero & Seguro</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #020617;
+            --glass-bg: rgba(30, 41, 59, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-hover: rgba(255, 255, 255, 0.15);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --success: #10b981;
+            --error: #f43f5e;
+            --system-msg: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glowing Background Blobs */
+        .ambient-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: var(--primary);
+            filter: blur(120px);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+            animation: pulse-glow 8s infinite alternate;
+        }
+
+        .glow-1 {
+            top: 20%;
+            left: 20%;
+        }
+
+        .glow-2 {
+            bottom: 20%;
+            right: 20%;
+            background: #ec4899; /* pinkish highlight */
+        }
+
+        @keyframes pulse-glow {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.12; }
+            100% { transform: scale(1.2) translate(30px, -20px); opacity: 0.20; }
+        }
+
+        /* Main Container */
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            height: 85vh;
+            max-height: 750px;
+            margin: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Hide sections dynamically */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Lobby screen styles */
+        .lobby-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+        }
+
+        .logo-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.4));
+            animation: bounce-slow 4s infinite ease-in-out;
+        }
+
+        @keyframes bounce-slow {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .logo-text {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 5px;
+            max-width: 400px;
+        }
+
+        .actions-box {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            max-width: 650px;
+            margin-top: 20px;
+        }
+
+        .action-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px 24px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .action-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--glass-border-hover);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.2);
+        }
+
+        .action-card.active-choice {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+        }
+
+        .action-card i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            transition: transform 0.3s;
+        }
+
+        .action-card:hover i {
+            transform: scale(1.15);
+        }
+
+        .action-card h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .action-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Form Area inside Lobby */
+        .form-container {
+            width: 100%;
+            max-width: 380px;
+            margin-top: 30px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .form-container.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(148, 163, 184, 0.4);
+        }
+
+        .btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px var(--primary-glow);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: rgba(99, 102, 241, 0.4);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Chat Screen Styles */
+        .chat-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .chat-screen.show {
+            opacity: 1;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+
+        .room-info h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .room-status {
+            font-size: 0.75rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 2px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .status-dot.connecting {
+            background: #eab308;
+            box-shadow: 0 0 8px #eab308;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Share Room Code Component */
+        .code-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 4px 4px 4px 12px;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+
+        .code-value {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: #ffffff;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%) translateY(5px);
+            background: #1e293b;
+            border: 1px solid var(--glass-border);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Chat Body layout */
+        .chat-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Chat Bubbles */
+        .msg-wrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            animation: msg-appear 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes msg-appear {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-wrapper.received {
+            align-self: flex-start;
+        }
+
+        .msg-wrapper.sent {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-sender {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            padding-left: 4px;
+        }
+
+        .msg-wrapper.sent .msg-sender {
+            padding-right: 4px;
+            padding-left: 0;
+        }
+
+        .msg-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .received .msg-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-top-left-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .sent .msg-bubble {
+            background: var(--primary);
+            border-top-right-radius: 4px;
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        }
+
+        .msg-time {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        /* System Info Messages */
+        .system-message {
+            align-self: center;
+            background: var(--system-msg);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            max-width: 90%;
+            animation: msg-appear 0.25s ease-out;
+            margin: 4px 0;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+            width: fit-content;
+            margin-bottom: 8px;
+            margin-left: 24px;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.2s ease;
+        }
+
+        .typing-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing-bounce 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing-bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+
+        /* Chat Input footer */
+        .chat-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        .input-bar {
+            display: flex;
+            gap: 12px;
+            position: relative;
+        }
+
+        .input-bar input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-bar input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .send-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px var(--primary-glow);
+        }
+
+        .send-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* Error/Notify Modal Toast */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 999;
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .toast.error-toast {
+            border-left: 4px solid var(--error);
+        }
+
+        .toast.error-toast i {
+            color: var(--error);
+        }
+
+        .toast.success-toast {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.success-toast i {
+            color: var(--success);
+        }
+
+        .toast-content {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Responsiveness */
+        @media(max-width: 640px) {
+            .app-container {
+                height: 100vh;
+                max-height: 100vh;
+                margin: 0;
+                border-radius: 0;
+                border: none;
+            }
+
+            .actions-box {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .action-card {
+                padding: 20px;
+                flex-direction: row;
+                justify-content: flex-start;
+                gap: 16px;
+                text-align: left;
+            }
+
+            .action-card i {
+                margin-bottom: 0;
+                font-size: 1.5rem;
+            }
+
+            .action-card h3 {
+                margin-bottom: 2px;
+                font-size: 1.05rem;
+            }
+
+            .action-card p {
+                font-size: 0.8rem;
+            }
+
+            .chat-header {
+                padding: 12px 16px;
+            }
+
+            .messages-container {
+                padding: 16px;
+            }
+
+            .chat-footer {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient glowing backgrounds -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <!-- App Container -->
+    <div class="app-container" id="app">
+        
+        <!-- ================= LOBBY SCREEN ================= -->
+        <div class="lobby-screen" id="lobby-screen">
+            <div class="logo-container">
+                <i class="fa-solid fa-ghost logo-icon"></i>
+                <h1 class="logo-text">Smoke (SMK)</h1>
+                <p class="logo-subtitle">Mensagens temporárias que se autodestroem. Sem rastro, sem login, totalmente efêmero.</p>
+            </div>
+
+            <!-- Action choices -->
+            <div class="actions-box">
+                <div class="action-card" id="card-new">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <div>
+                        <h3>Criar Novo Chat</h3>
+                        <p>Inicie uma sala exclusiva e obtenha um código para compartilhar.</p>
+                    </div>
+                </div>
+
+                <div class="action-card" id="card-join">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <div>
+                        <h3>Entrar com Código</h3>
+                        <p>Insira o código de um chat criado para ingressar na conversa.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form parameters -->
+            <div class="form-container" id="form-container">
+                <div class="input-group" id="group-code">
+                    <label for="room-code-input">Código do Chat</label>
+                    <input type="text" id="room-code-input" placeholder="Digite o código (ex: X9B2F7)" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="nickname-input">Seu Apelido</label>
+                    <input type="text" id="nickname-input" placeholder="Como quer ser chamado?" maxlength="15" autocomplete="off">
+                </div>
+
+                <button class="btn" id="start-btn" disabled>
+                    <span>Iniciar Chat</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ================= CHAT SCREEN ================= -->
+        <div class="chat-screen hidden" id="chat-screen">
+            <div class="chat-header">
+                <div class="header-left">
+                    <button class="back-btn" id="leave-btn" title="Sair do chat">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div class="room-info">
+                        <h2 id="display-room-title">Sala</h2>
+                        <div class="room-status">
+                            <span class="status-dot" id="connection-dot"></span>
+                            <span id="connection-status-text">Conectado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="code-pill">
+                        <span class="code-value" id="display-room-code">------</span>
+                        <button class="copy-btn" id="copy-btn">
+                            Copiar
+                            <span class="tooltip" id="copy-tooltip">Copiado!</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-body">
+                <div class="messages-container" id="messages-container">
+                    <!-- Dynamic Messages will load here -->
+                </div>
+            </div>
+
+            <!-- Typing indicator -->
+            <div class="typing-indicator" id="typing-indicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+
+            <div class="chat-footer">
+                <form class="input-bar" id="chat-form">
+                    <input type="text" id="message-input" placeholder="Envie uma mensagem efêmera..." autocomplete="off">
+                    <button type="submit" class="send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast system -->
+    <div class="toast error-toast" id="toast">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <div class="toast-content" id="toast-message">Erro ao realizar operação.</div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const cardNew = document.getElementById('card-new');
+        const cardJoin = document.getElementById('card-join');
+        const formContainer = document.getElementById('form-container');
+        const groupCode = document.getElementById('group-code');
+        const roomCodeInput = document.getElementById('room-code-input');
+        const nicknameInput = document.getElementById('nickname-input');
+        const startBtn = document.getElementById('start-btn');
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const chatScreen = document.getElementById('chat-screen');
+        const displayRoomTitle = document.getElementById('display-room-title');
+        const displayRoomCode = document.getElementById('display-room-code');
+        const connectionDot = document.getElementById('connection-dot');
+        const connectionStatusText = document.getElementById('connection-status-text');
+        const leaveBtn = document.getElementById('leave-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const copyTooltip = document.getElementById('copy-tooltip');
+        const messagesContainer = document.getElementById('messages-container');
+        const messageInput = document.getElementById('message-input');
+        const chatForm = document.getElementById('chat-form');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // State variables
+        let selectedMode = null; // 'new' or 'join'
+        let wsConn = null;
+        let currentRoomCode = null;
+        let currentNickname = null;
+
+        // WebRTC P2P variables
+        let peerConnection = null;
+        let dataChannel = null;
+        const rtcConfig = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // Auto-check URL path for quick joining
+        window.addEventListener('DOMContentLoaded', () => {
+            const pathParams = window.location.pathname.split('/');
+            // Check if URL is like /join/XYZABC
+            if (pathParams.length >= 3 && pathParams[1] === 'join') {
+                const urlCode = pathParams[2].toUpperCase();
+                selectJoinMode(urlCode);
+            }
+        });
+
+        // Mode selections
+        cardNew.addEventListener('click', () => {
+            selectedMode = 'new';
+            cardNew.classList.add('active-choice');
+            cardJoin.classList.remove('active-choice');
+            groupCode.classList.add('hidden');
+            formContainer.classList.add('show');
+            validateForm();
+            nicknameInput.focus();
+        });
+
+        cardJoin.addEventListener('click', () => {
+            selectJoinMode();
+        });
+
+        function selectJoinMode(prefilledCode = '') {
+            selectedMode = 'join';
+            cardJoin.classList.add('active-choice');
+            cardNew.classList.remove('active-choice');
+            groupCode.classList.remove('hidden');
+            formContainer.classList.add('show');
+            if (prefilledCode) {
+                roomCodeInput.value = prefilledCode;
+            }
+            validateForm();
+            if (!prefilledCode) {
+                roomCodeInput.focus();
+            } else {
+                nicknameInput.focus();
+            }
+        }
+
+        // Form inputs validation
+        roomCodeInput.addEventListener('input', validateForm);
+        nicknameInput.addEventListener('input', validateForm);
+
+        function validateForm() {
+            const nickname = nicknameInput.value.trim();
+            const code = roomCodeInput.value.trim();
+            
+            if (selectedMode === 'new') {
+                startBtn.disabled = nickname.length === 0;
+            } else if (selectedMode === 'join') {
+                startBtn.disabled = nickname.length === 0 || code.length === 0;
+            }
+        }
+
+        // Handle Start Action
+        startBtn.addEventListener('click', async () => {
+            const nickname = nicknameInput.value.trim();
+            currentNickname = nickname;
+
+            if (selectedMode === 'new') {
+                startBtn.disabled = true;
+                try {
+                    // Create Room Request
+                    const response = await fetch('/api/rooms', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (!response.ok) throw new Error('Não foi possível criar a sala.');
+                    
+                    const data = await response.json();
+                    currentRoomCode = data.code;
+                    
+                    // Connect to WS and open chat
+                    connectWebSocket();
+                } catch (err) {
+                    showToast(err.message || 'Erro ao conectar ao servidor.', 'error');
+                    startBtn.disabled = false;
+                }
+            } else if (selectedMode === 'join') {
+                const roomCode = roomCodeInput.value.trim().toUpperCase();
+                startBtn.disabled = true;
+                
+                try {
+                    // Validate room existence
+                    const response = await fetch(`/api/rooms/check?code=${roomCode}`);
+                    if (!response.ok) throw new Error('Falha ao validar código.');
+                    
+                    const data = await response.json();
+                    if (!data.exists) {
+                        throw new Error('Essa sala não existe ou expirou.');
+                    }
+                    
+                    currentRoomCode = data.code;
+                    connectWebSocket();
+                } catch (err) {
+                    showToast(err.message, 'error');
+                    startBtn.disabled = false;
+                }
+            }
+        });
+
+        // Toast display utility
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            
+            toast.className = `toast ${type === 'error' ? 'error-toast' : 'success-toast'}`;
+            toastMsg.innerText = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // WebSocket Connection (used only for signaling)
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const wsUrl = `${protocol}//${host}/ws?room=${currentRoomCode}&nickname=${encodeURIComponent(currentNickname)}`;
+
+            // Transition UI to screen loading state
+            lobbyScreen.classList.add('hidden');
+            chatScreen.classList.remove('hidden');
+            
+            // Set header displays
+            displayRoomTitle.innerText = `Sala Privada`;
+            displayRoomCode.innerText = currentRoomCode;
+            
+            // Set browser URL query params dynamically to allow easy sharing
+            const shareUrlPath = `/join/${currentRoomCode}`;
+            window.history.pushState({ roomCode: currentRoomCode }, '', shareUrlPath);
+
+            connectionDot.className = 'status-dot connecting';
+            connectionStatusText.innerText = 'Sinalizando...';
+
+            wsConn = new WebSocket(wsUrl);
+
+            wsConn.onopen = (e) => {
+                messagesContainer.innerHTML = '';
+                addSystemMessage('Sinalização ativa. Aguardando par entrar...');
+                
+                // Set transition visual
+                setTimeout(() => {
+                    chatScreen.classList.add('show');
+                }, 50);
+            };
+
+            wsConn.onmessage = async (e) => {
+                const message = JSON.parse(e.data);
+                
+                if (message.type === 'peer-joined') {
+                    addSystemMessage('Par conectado. Iniciando canal P2P seguro...');
+                    initiateWebRTC(true); // We initiate the offer
+                } else if (message.type === 'offer') {
+                    addSystemMessage('Recebendo solicitação de conexão P2P direta...');
+                    await handleOffer(message.payload);
+                } else if (message.type === 'answer') {
+                    await handleAnswer(message.payload);
+                } else if (message.type === 'candidate') {
+                    if (peerConnection && message.payload) {
+                        try {
+                            await peerConnection.addIceCandidate(new RTCIceCandidate(message.payload));
+                        } catch (err) {
+                            console.error("Erro ao adicionar ICE candidate:", err);
+                        }
+                    }
+                } else if (message.type === 'leave') {
+                    addSystemMessage(message.content);
+                    cleanupP2P();
+                }
+            };
+
+            wsConn.onclose = (e) => {
+                // If WebRTC is already connected, we don't care if signaling server dies!
+                if (!dataChannel || dataChannel.readyState !== 'open') {
+                    connectionDot.className = 'status-dot connecting';
+                    connectionStatusText.innerText = 'Desconectado';
+                    addSystemMessage('A conexão de sinalização foi encerrada.');
+                }
+            };
+
+            wsConn.onerror = (err) => {
+                console.error("WS error:", err);
+            };
+        }
+
+        // WebRTC functions
+        function initiateWebRTC(isInitiator) {
+            cleanupP2P();
+
+            peerConnection = new RTCPeerConnection(rtcConfig);
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate && wsConn && wsConn.readyState === WebSocket.OPEN) {
+                    wsConn.send(JSON.stringify({
+                        type: 'candidate',
+                        payload: event.candidate
+                    }));
+                }
+            };
+
+            if (isInitiator) {
+                // Create Data Channel
+                dataChannel = peerConnection.createDataChannel('chat');
+                setupDataChannelHandlers(dataChannel);
+
+                // Create Offer
+                peerConnection.createOffer().then(offer => {
+                    return peerConnection.setLocalDescription(offer);
+                }).then(() => {
+                    wsConn.send(JSON.stringify({
+                        type: 'offer',
+                        payload: peerConnection.localDescription
+                    }));
+                }).catch(err => {
+                    console.error("Erro ao criar oferta:", err);
+                    showToast("Erro ao iniciar pareamento P2P.", "error");
+                });
+            } else {
+                // Wait for Data Channel
+                peerConnection.ondatachannel = (event) => {
+                    dataChannel = event.channel;
+                    setupDataChannelHandlers(dataChannel);
+                };
+            }
+        }
+
+        async function handleOffer(offer) {
+            initiateWebRTC(false); // Receiver mode
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                wsConn.send(JSON.stringify({
+                    type: 'answer',
+                    payload: peerConnection.localDescription
+                }));
+            } catch (err) {
+                console.error("Erro ao responder oferta:", err);
+                showToast("Falha ao aceitar conexão P2P.", "error");
+            }
+        }
+
+        async function handleAnswer(answer) {
+            if (!peerConnection) return;
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+            } catch (err) {
+                console.error("Erro ao processar resposta:", err);
+            }
+        }
+
+        function setupDataChannelHandlers(channel) {
+            channel.onopen = () => {
+                connectionDot.className = 'status-dot';
+                connectionStatusText.innerText = 'Conectado P2P';
+                addSystemMessage('Conexão P2P (WebRTC) direta ativa! Todas as mensagens agora são transmitidas sem passar pelo servidor.');
+                showToast('Conectado diretamente P2P!', 'success');
+            };
+
+            channel.onclose = () => {
+                connectionDot.className = 'status-dot connecting';
+                connectionStatusText.innerText = 'Desconectado';
+                addSystemMessage('A conexão P2P direta foi encerrada.');
+            };
+
+            channel.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                addBubbleMessage(msg.sender, msg.content, msg.timestamp, false);
+            };
+        }
+
+        function cleanupP2P() {
+            if (dataChannel) {
+                try { dataChannel.close(); } catch(e){}
+                dataChannel = null;
+            }
+            if (peerConnection) {
+                try { peerConnection.close(); } catch(e){}
+                peerConnection = null;
+            }
+        }
+
+        function addSystemMessage(text) {
+            const msgEl = document.createElement('div');
+            msgEl.className = 'system-message';
+            msgEl.innerText = text;
+            messagesContainer.appendChild(msgEl);
+            scrollToBottom();
+        }
+
+        function addBubbleMessage(sender, text, timestampStr, isSelf) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `msg-wrapper ${isSelf ? 'sent' : 'received'}`;
+            
+            const senderLabel = document.createElement('span');
+            senderLabel.className = 'msg-sender';
+            senderLabel.innerText = isSelf ? 'Você' : sender;
+            wrapper.appendChild(senderLabel);
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.innerText = text;
+            wrapper.appendChild(bubble);
+
+            const timeEl = document.createElement('span');
+            timeEl.className = 'msg-time';
+            
+            // Format time
+            const date = timestampStr ? new Date(timestampStr) : new Date();
+            const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            timeEl.innerText = timeStr;
+            wrapper.appendChild(timeEl);
+
+            messagesContainer.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send logic via DataChannel
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = messageInput.value.trim();
+            if (text === '') return;
+
+            if (!dataChannel || dataChannel.readyState !== 'open') {
+                showToast('Aguardando pareamento WebRTC...', 'error');
+                return;
+            }
+
+            const payload = {
+                sender: currentNickname,
+                content: text,
+                timestamp: new Date().toISOString()
+            };
+
+            dataChannel.send(JSON.stringify(payload));
+            addBubbleMessage(currentNickname, text, payload.timestamp, true);
+            
+            messageInput.value = '';
+            messageInput.focus();
+        });
+
+        // Leave room
+        leaveBtn.addEventListener('click', () => {
+            if (confirm('Deseja realmente sair do chat? Sua conversa será apagada.')) {
+                cleanupP2P();
+                if (wsConn) {
+                    wsConn.close();
+                }
+                
+                // Reset state
+                wsConn = null;
+                currentRoomCode = null;
+                currentNickname = null;
+                
+                // Clear inputs
+                roomCodeInput.value = '';
+                nicknameInput.value = '';
+                messageInput.value = '';
+                
+                // Reset URL
+                window.history.pushState({}, '', '/');
+                
+                // Screen transition back
+                chatScreen.classList.remove('show');
+                chatScreen.classList.add('hidden');
+                lobbyScreen.classList.remove('hidden');
+                
+                cardNew.classList.remove('active-choice');
+                cardJoin.classList.remove('active-choice');
+                formContainer.classList.remove('show');
+                startBtn.disabled = true;
+            }
+        });
+
+        // Copy button action
+        copyBtn.addEventListener('click', () => {
+            const shareUrl = `${window.location.protocol}//${window.location.host}/join/${currentRoomCode}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                copyTooltip.classList.add('show');
+                showToast('Link do chat copiado para compartilhamento!', 'success');
+                setTimeout(() => {
+                    copyTooltip.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                // Fallback copy room code only
+                navigator.clipboard.writeText(currentRoomCode);
+                showToast('Código copiado!', 'success');
+            });
+        });
+    </script>
+</body>
+</html>

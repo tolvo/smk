@@ -1,0 +1,24 @@
+name: smk_frontend
+description: A modern, ephemeral chat application client built in Flutter.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.5
+  web_socket_channel: ^3.0.1
+  http: ^1.2.0
+  share_plus: ^7.2.1
+  google_fonts: ^6.1.0
+  flutter_webrtc: ^0.12.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
