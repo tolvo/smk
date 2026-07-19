@@ -10,27 +10,27 @@ O SMK é dividido em duas partes principais: um **Backend de Sinalização (Go)*
 
 ```mermaid
 sequenceDiagram
-    participant User A (Flutter)
-    participant Server (Go WS)
-    participant User B (Flutter)
+    participant A as User A (Flutter)
+    participant S as Server (Go WS)
+    participant B as User B (Flutter)
 
-    Note over User A, User B: 1. Conexão e Sinalização (WebSockets)
-    User A->>Server: Criar Sala
-    Server-->>User A: Código da Sala (Ex: X9B2F7)
-    User B->>Server: Entrar na Sala (Código + Apelido)
-    Server-->>User A: peer-joined (Aviso de Novo Par)
+    Note over A, B: 1. Conexão e Sinalização (WebSockets)
+    A->>S: Criar Sala
+    S-->>A: Código da Sala (Ex: X9B2F7)
+    B->>S: Entrar na Sala (Código + Apelido)
+    S-->>A: peer-joined (Aviso de Novo Par)
 
-    Note over User A, User B: 2. Negociação WebRTC (Via WebSocket)
-    User A->>Server: Envia "Offer" (SDP)
-    Server->>User B: Repassa "Offer"
-    User B->>Server: Envia "Answer" (SDP)
-    Server->>User A: Repassa "Answer"
-    User A->>Server: Envia "ICE Candidates"
-    Server->>User B: Repassa "ICE Candidates"
+    Note over A, B: 2. Negociação WebRTC (Via WebSocket)
+    A->>S: Envia "Offer" (SDP)
+    S->>B: Repassa "Offer"
+    B->>S: Envia "Answer" (SDP)
+    S->>A: Repassa "Answer"
+    A->>S: Envia "ICE Candidates"
+    S->>B: Repassa "ICE Candidates"
 
-    Note over User A, User B: 3. Conexão Direta (WebRTC Data Channel)
-    User A<->>User B: Estabelece Canal P2P Direto (Sem Servidor)
-    User A<->>User B: Envio de Mensagens Seguras e Efêmeras
+    Note over A, B: 3. Conexão Direta (WebRTC Data Channel)
+    A->>B: Estabelece Canal P2P Direto (Sem Servidor)
+    A->>B: Envio de Mensagens Seguras e Efêmeras
 ```
 
 ### 1. Cliente (Frontend) - Flutter
